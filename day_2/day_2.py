@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from io import TextIOWrapper
+import math
 from typing import Optional
 
 
@@ -23,6 +24,10 @@ class Game:
         red: Optional[int]
         green: Optional[int]
         blue: Optional[int]
+        
+        def __str__(self) -> str:
+            return f'Set cubes: {self.red} red, {self.green} green, {self.blue} blue'
+        
     id: int
     sets: list[Set]
     
@@ -35,7 +40,7 @@ class Game:
             game_set = self.Set()
             for color_str in set_str.split(','):
                 amount, color = tuple(color_str.strip().split())
-                game_set.__setattr__(color, int(amount))
+                setattr(game_set, color, int(amount))
             self.sets.append(game_set)        
           
 
@@ -46,7 +51,25 @@ def is_game_possible(game: Game) -> bool:
     return True
 
 
-def main(lines: TextIOWrapper) -> int:
+def set_power(game_set: Game.Set) -> int:
+    return math.prod([getattr(game_set, color.value, 0) for color in Color])
+
+
+def minimum_game_power(game: Game) -> int:
+    min_set = Game.Set()
+    min_set.red = 0
+    min_set.green = 0
+    min_set.blue = 0
+    
+    for game_set in game.sets:
+        for color in Color:
+            if (set_val := getattr(game_set, color.value, 0)) > getattr(min_set, color.value, 0):
+                setattr(min_set, color.value, set_val)
+        
+    return set_power(min_set)
+
+
+def task_one(lines: TextIOWrapper) -> int:
     ids = []
     for line in lines:
         game = Game(line)
@@ -55,6 +78,14 @@ def main(lines: TextIOWrapper) -> int:
     return sum(ids)
 
 
+def task_two(lines: TextIOWrapper) -> int:
+    game_powers = [minimum_game_power(Game(line)) for line in lines]
+    return sum(game_powers)
+
+
 if __name__ == '__main__':
+    # print(minimum_game_power(Game('Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green')))
+    
     with open('input.txt', mode='r') as input_file:
-        print(main(input_file))
+        # print(task_one(input_file))
+        print(task_two(input_file))
